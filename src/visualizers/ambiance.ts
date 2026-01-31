@@ -47,12 +47,12 @@ function createParticle(
 ): Particle {
   const baseSize = config.minSize + Math.random() * (config.maxSize - config.minSize);
   return {
-    // Fireflies spawn across entire screen, respawns from edges
-    x: randomPosition ? Math.random() * width : -30 - Math.random() * 50,
+    // Fireflies spawn randomly across entire screen
+    x: Math.random() * width,
     y: Math.random() * height,
-    // Slow, dreamy drift like real fireflies
-    vx: (0.3 + Math.random() * 0.4) * config.flowSpeed,
-    vy: (Math.random() - 0.5) * config.flowSpeed * 0.5,
+    // Random slow drift in any direction like real fireflies
+    vx: (Math.random() - 0.5) * config.flowSpeed * 0.8,
+    vy: (Math.random() - 0.5) * config.flowSpeed * 0.8,
     size: baseSize,
     baseSize: baseSize,
     hue: FIREFLY_HUES.min + Math.random() * (FIREFLY_HUES.max - FIREFLY_HUES.min),
@@ -96,17 +96,18 @@ export const ambianceVisualizer: VisualizerRenderer = {
       // Update life
       particle.life++;
 
-      // Reset particle if it goes off screen or life expires
-      if (
-        particle.x > width + 50 ||
-        particle.y < -50 ||
-        particle.y > height + 50 ||
-        particle.life > particle.maxLife
-      ) {
+      // Reset particle if life expires - respawn randomly on screen
+      if (particle.life > particle.maxLife) {
         const newParticle = createParticle(width, height, ambianceConfig);
         particles[index] = newParticle;
         return;
       }
+
+      // Wrap around screen edges so fireflies stay visible
+      if (particle.x < -30) particle.x = width + 20;
+      if (particle.x > width + 30) particle.x = -20;
+      if (particle.y < -30) particle.y = height + 20;
+      if (particle.y > height + 30) particle.y = -20;
 
       // React to bass - expand size and add vertical movement
       const bassReaction = bassEnergy * reactivity;
