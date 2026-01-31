@@ -1,6 +1,11 @@
 import type { VisualizerRenderer, AnalyserData, VisualizerConfig } from "./types";
-import { getRainbowColor } from "@/utils/colorPalettes";
 import { getBassEnergy, getTrebleEnergy } from "@/utils/audioHelpers";
+
+// Firefly color palette - warm yellow-green bioluminescent colors
+const FIREFLY_HUES = {
+  min: 45,   // Warm yellow
+  max: 95,   // Yellow-green
+};
 
 interface AmbianceConfig extends VisualizerConfig {
   particleCount: number;
@@ -50,15 +55,15 @@ function createParticle(
     vy: (Math.random() - 0.5) * config.flowSpeed * 0.3,
     size: baseSize,
     baseSize: baseSize,
-    hue: Math.random() * 360,
+    hue: FIREFLY_HUES.min + Math.random() * (FIREFLY_HUES.max - FIREFLY_HUES.min),
     life: 0,
     maxLife: 800 + Math.random() * 400,  // Much longer life to cross full screen
   };
 }
 
 export const ambianceVisualizer: VisualizerRenderer = {
-  name: "Ambiance",
-  description: "Flowing particles that react to bass frequencies",
+  name: "Fireflies",
+  description: "Glowing fireflies drifting through a forest night",
 
   render(
     ctx: CanvasRenderingContext2D,
@@ -76,8 +81,8 @@ export const ambianceVisualizer: VisualizerRenderer = {
       initParticles(width, height, particleCount, ambianceConfig);
     }
 
-    // Clear with heavy fade for smooth trails
-    ctx.fillStyle = "rgba(10, 10, 15, 0.05)";
+    // Clear with heavy fade for smooth firefly trails - dark forest night
+    ctx.fillStyle = "rgba(5, 10, 8, 0.06)";
     ctx.fillRect(0, 0, width, height);
 
     time += deltaTime;
@@ -127,17 +132,18 @@ export const ambianceVisualizer: VisualizerRenderer = {
           ? (1 - lifeRatio) * 5
           : 1;
 
-      // Update hue based on audio
-      particle.hue = (particle.hue + averageFrequency * 2) % 360;
+      // Update hue - oscillate within firefly color range based on audio
+      const hueRange = FIREFLY_HUES.max - FIREFLY_HUES.min;
+      particle.hue = FIREFLY_HUES.min + ((particle.hue - FIREFLY_HUES.min + averageFrequency * 0.5) % hueRange);
 
-      // Draw particle with glow
-      const color = getRainbowColor(time + particle.hue, particle.hue);
+      // Firefly glow color - warm yellow-green
+      const glowColor = `hsl(${particle.hue}, 100%, 60%)`;
 
-      // Outer glow
-      ctx.shadowColor = color;
-      ctx.shadowBlur = particle.size * 2 * (1 + bassEnergy);
+      // Outer glow - warm firefly glow
+      ctx.shadowColor = glowColor;
+      ctx.shadowBlur = particle.size * 2.5 * (1 + bassEnergy);
 
-      // Create gradient for soft particle
+      // Create gradient for soft firefly particle
       const gradient = ctx.createRadialGradient(
         particle.x,
         particle.y,
@@ -146,8 +152,10 @@ export const ambianceVisualizer: VisualizerRenderer = {
         particle.y,
         particle.size
       );
-      gradient.addColorStop(0, `hsla(${particle.hue}, 80%, 60%, ${alpha * 0.8})`);
-      gradient.addColorStop(0.5, `hsla(${particle.hue}, 70%, 50%, ${alpha * 0.4})`);
+      // Bright white-yellow core fading to warm green
+      gradient.addColorStop(0, `hsla(60, 100%, 95%, ${alpha * 0.9})`);
+      gradient.addColorStop(0.3, `hsla(${particle.hue}, 100%, 70%, ${alpha * 0.7})`);
+      gradient.addColorStop(0.6, `hsla(${particle.hue}, 90%, 50%, ${alpha * 0.3})`);
       gradient.addColorStop(1, "transparent");
 
       ctx.beginPath();
@@ -155,18 +163,18 @@ export const ambianceVisualizer: VisualizerRenderer = {
       ctx.fillStyle = gradient;
       ctx.fill();
 
-      // Draw inner bright core
+      // Draw inner bright core - white-yellow firefly center
       if (alpha > 0.5) {
         ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size * 0.3, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
+        ctx.arc(particle.x, particle.y, particle.size * 0.25, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 220, ${alpha * 0.8})`;
         ctx.fill();
       }
     });
 
     ctx.shadowBlur = 0;
 
-    // Draw ambient background gradient based on audio
+    // Draw ambient background gradient - dark forest night atmosphere
     const bgGradient = ctx.createRadialGradient(
       width / 2,
       height / 2,
@@ -175,9 +183,9 @@ export const ambianceVisualizer: VisualizerRenderer = {
       height / 2,
       Math.max(width, height) * 0.7
     );
-    const bgHue = (time * 0.01 + averageFrequency * 180) % 360;
-    bgGradient.addColorStop(0, `hsla(${bgHue}, 50%, 20%, ${averageFrequency * 0.1})`);
-    bgGradient.addColorStop(0.5, `hsla(${(bgHue + 60) % 360}, 40%, 10%, ${averageFrequency * 0.05})`);
+    // Dark blue-green forest night colors
+    bgGradient.addColorStop(0, `hsla(180, 30%, 8%, ${0.05 + averageFrequency * 0.1})`);
+    bgGradient.addColorStop(0.5, `hsla(200, 40%, 5%, ${averageFrequency * 0.05})`);
     bgGradient.addColorStop(1, "transparent");
 
     ctx.fillStyle = bgGradient;
