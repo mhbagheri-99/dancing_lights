@@ -47,17 +47,17 @@ function createParticle(
 ): Particle {
   const baseSize = config.minSize + Math.random() * (config.maxSize - config.minSize);
   return {
-    // Initial particles spread across screen, respawns start off-screen left
-    x: randomPosition ? Math.random() * width : -50 - Math.random() * 100,
+    // Fireflies spawn across entire screen, respawns from edges
+    x: randomPosition ? Math.random() * width : -30 - Math.random() * 50,
     y: Math.random() * height,
-    // Faster horizontal flow for full screen coverage
-    vx: (1.2 + Math.random() * 0.8) * config.flowSpeed,
-    vy: (Math.random() - 0.5) * config.flowSpeed * 0.3,
+    // Slow, dreamy drift like real fireflies
+    vx: (0.3 + Math.random() * 0.4) * config.flowSpeed,
+    vy: (Math.random() - 0.5) * config.flowSpeed * 0.5,
     size: baseSize,
     baseSize: baseSize,
     hue: FIREFLY_HUES.min + Math.random() * (FIREFLY_HUES.max - FIREFLY_HUES.min),
     life: 0,
-    maxLife: 800 + Math.random() * 400,  // Much longer life to cross full screen
+    maxLife: 1500 + Math.random() * 800,  // Long life for slow dreamy drift across screen
   };
 }
 
@@ -112,17 +112,18 @@ export const ambianceVisualizer: VisualizerRenderer = {
       const bassReaction = bassEnergy * reactivity;
       particle.size = particle.baseSize * (1 + bassReaction * 3);
 
-      // React to treble - add shimmer and speed variation
+      // React to treble - subtle shimmer
       const trebleReaction = trebleEnergy * reactivity;
-      const speedMultiplier = 1 + trebleReaction * 2;
+      const speedMultiplier = 1 + trebleReaction * 0.5;
 
-      // Update position with flow and audio reaction
-      const flowAngle = Math.sin(time * 0.001 + particle.y * 0.01) * 0.5;
-      particle.x += particle.vx * speedMultiplier * (deltaTime * 0.05);
-      particle.y += particle.vy * speedMultiplier * (deltaTime * 0.05) + Math.sin(flowAngle) * bassReaction * 2;
+      // Slow dreamy drift with gentle wandering
+      const wanderAngle = Math.sin(time * 0.0005 + particle.y * 0.005) * 0.3;
+      particle.x += particle.vx * speedMultiplier * (deltaTime * 0.03);
+      particle.y += particle.vy * speedMultiplier * (deltaTime * 0.03) + Math.sin(wanderAngle) * bassReaction * 0.8;
 
-      // Add slight wave motion
-      particle.y += Math.sin(time * 0.002 + particle.x * 0.01) * 0.5;
+      // Gentle floating motion like real fireflies
+      particle.y += Math.sin(time * 0.001 + particle.x * 0.005) * 0.3;
+      particle.x += Math.cos(time * 0.0008 + particle.y * 0.003) * 0.2;
 
       // Calculate alpha based on life
       const lifeRatio = particle.life / particle.maxLife;
@@ -193,10 +194,10 @@ export const ambianceVisualizer: VisualizerRenderer = {
   },
 
   defaultConfig: {
-    particleCount: 80,
-    maxSize: 40,
-    minSize: 10,
-    flowSpeed: 3.5,  // Fast flow to cross entire screen
-    reactivity: 2,
+    particleCount: 60,
+    maxSize: 35,
+    minSize: 8,
+    flowSpeed: 1.2,  // Slow dreamy drift
+    reactivity: 1.5,
   } as AmbianceConfig,
 };
