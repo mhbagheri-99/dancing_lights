@@ -116,11 +116,12 @@ export function Visualizer() {
       {/* Canvas */}
       <VisualizerCanvas getData={getData} mode={currentMode} isActive={isActive} />
 
-      {/* Controls overlay */}
+      {/* Controls overlay - with safe area padding for iOS */}
       <div
         className={`controls-overlay absolute inset-x-0 bottom-0 p-6 flex flex-col items-center gap-4 ${
           showControls ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
+        style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
       >
         {/* Mode selector */}
         <ModeSelector currentMode={currentMode} onModeChange={setMode} />
@@ -134,8 +135,8 @@ export function Visualizer() {
           onClick={toggleMicrophone}
         />
 
-        {/* Keyboard hints */}
-        <div className="flex gap-4 text-xs text-[var(--text-secondary)]">
+        {/* Keyboard hints - hidden on mobile */}
+        <div className="hidden sm:flex gap-4 text-xs text-[var(--text-secondary)]">
           <span>Space: Toggle mic</span>
           <span>1-4: Switch mode</span>
           <span>F: Fullscreen</span>
